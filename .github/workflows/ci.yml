@@ -1,0 +1,27 @@
+name: CI
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 2 1 * *'
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Validation dependencies
+        run: sudo apt-get update && sudo apt-get install -y shellcheck zsh python3-gi
+      - name: Syntax and ShellCheck
+        run: |
+          find . -name '*.sh' -print0 | xargs -0 -n1 bash -n
+          zsh -n dotfiles/shell.sh
+          shellcheck -x -e SC1090,SC1091,SC2034 install.sh bootstrap.sh update.sh shells/*.sh
+      - name: Safety tests (temporary home only)
+        run: /usr/bin/python3 -m unittest discover -s tests -v
