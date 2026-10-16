@@ -8,17 +8,29 @@ Ubuntu Desktopの日本語入力と開発環境を再現する、個人用Bash�
 
 ## 実行する
 
-最初にGitがなければインストールします。
+Gitの事前インストールは不要です。`curl` でbootstrapを取得し、内容を確認してから実行します。`curl` がない場合だけ、先に `sudo apt update` と `sudo apt install -y curl ca-certificates` を実行してください。`build-essential` にはGitやcurlは含まれません。
 
 ```bash
-sudo apt update
-sudo apt install -y git ca-certificates
+bootstrap_file=$(mktemp)
+curl --proto '=https' --tlsv1.2 -fL \
+  https://raw.githubusercontent.com/mitsuharu/ubuntu-infra/master/bootstrap.sh \
+  -o "$bootstrap_file"
+cat "$bootstrap_file"           # 実行前に内容を確認
+bash "$bootstrap_file" https://github.com/mitsuharu/ubuntu-infra.git
+rm -f "$bootstrap_file"
+```
 
-git clone https://github.com/mitsuharu/ubuntu-infra.git ~/ubuntu-infra
+bootstrapはGitがなければaptで導入し、`~/ubuntu-infra` にリポジトリをcloneして、セットアップの変更予定を表示します。**bootstrap自体のGit導入・cloneは実際に行いますが、環境設定の適用はまだ行いません。** 既存のチェックアウトがあれば、その内容を使い、自動更新しません。取得に失敗した場合は実行せず、URLや通信状態を確認してください。
+
+取得した `~/ubuntu-infra` のスクリプト・`config.sh` と表示された予定を確認した後、必要な設定を調整して適用します。
+
+```bash
 cd ~/ubuntu-infra
-bash install.sh                 # 変更予定を表示するだけ
+bash install.sh                 # 変更予定をもう一度確認
 bash install.sh --apply         # 実際に適用
 ```
+
+すでにGitがある場合は、`git clone https://github.com/mitsuharu/ubuntu-infra.git ~/ubuntu-infra` で取得しても構いません。
 
 全体を `sudo bash install.sh` で起動しないでください。システムパッケージ操作にだけsudoを使い、ユーザー設定・anyenvは通常ユーザーのホームに配置します。既存のanyenvやdotfilesがあるマシンでも再実行できます。既存のanyenv本体やプラグインは自動pullせず、そのチェックアウトを使います。
 
@@ -92,7 +104,7 @@ bash ~/ubuntu-infra/update.sh --apply  # 更新後にセットアップを再適
 
 `main` / `master` かつ作業ツリーがクリーンな場合に限ります。アプリの既存パッケージはセットアップ時に再ダウンロードせず、通常の `sudo apt update` とパッケージを指定した `sudo apt install --only-upgrade ...` で更新します。Claude Codeは公式インストーラーの更新方式を利用します。Ruby / Nodeは `config.local.sh` のバージョンを明示的に変えてからanyenvを再適用します。定義が見つからない場合は対応するruby-build / node-buildの更新を確認してください。
 
-`bootstrap.sh` はGit未導入時の補助入口です。ローカルに取得したスクリプトの内容を確認した後、`bash bootstrap.sh https://github.com/mitsuharu/ubuntu-infra.git --apply` で `~/ubuntu-infra` のcloneと適用を行えます。通常は上記のclone手順を使ってください。
+`bootstrap.sh` は冒頭のcurl手順で使う初回セットアップの入口です。取得済みのbootstrapに `--apply` を付けるとclone後にそのまま適用できます。まず既定の変更予定表示で設定を確認してください。
 
 ## 検証
 
