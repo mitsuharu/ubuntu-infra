@@ -128,6 +128,16 @@ bash ~/ubuntu-infra/update.sh --apply  # 更新後にセットアップを再適
 
 `bootstrap.sh` は冒頭のcurl手順で使う初回セットアップの入口です。取得済みのbootstrapに `--apply` を付けるとclone後にそのまま適用できます。まず既定の変更予定表示で設定を確認してください。
 
+## リリース
+
+`master` にマージ済みのコミットへ `1.2.3` 形式のタグをpushすると、[.github/workflows/release.yml](.github/workflows/release.yml) がそのタグでGitHub Releaseを作成します。リリースノートはGitHubの自動生成を使います。
+
+```bash
+git tag 1.0.0 && git push origin 1.0.0
+```
+
+Actionsの「GitHub Release」を `master` から手動実行し、`version` にタグ名を入れると、そのときの `master` の先頭コミットにタグを作って公開します。`v1.0.0` や `1.0.0-rc1` のような形式、`master` 以外からの手動実行、同名のリリースが既にある場合は失敗し、既存のリリースは上書きしません。タグとリリースは公開後に取り消しにくいため、作成前に作者が確認してください。
+
 ## 検証
 
 ```bash

@@ -1,0 +1,87 @@
+name: GitHub Release
+
+on:
+  # PRのCIからは公開しない。タグのpushと手動実行だけを起点にする。
+  push:
+    tags:
+      - '[0-9]*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'リリースタグ（例: 1.0.0）'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+  # 公開途中で中断するとタグだけが残るため、後続の実行で取り消さない。
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: タグからリリースを公開
+    # bashとプリインストールのghだけを使い、OSのバージョンに依存しないため、
+    # 固定版の廃止追従が要らないubuntu-latestにする（macos-infraとも揃う）。
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: リリースタグを検証
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          tag="$REF_NAME"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            # 手動実行では対象コミットを固定するため、master以外を受け付けない。
+            if [[ "$REF" != "refs/heads/master" ]]; then
+              echo "::error::手動実行はmasterブランチから行ってください"
+              exit 1
+            fi
+            tag="$REQUESTED_VERSION"
+          fi
+
+          if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::タグは1.2.3形式で指定してください: $tag"
+            exit 1
+          fi
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+
+      - name: GitHub Releaseを作成
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::リリース $TAG は既に存在します。重複公開を避けるため終了します。"
+            exit 1
+          fi
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            # 手動実行時はmaster上の対象コミットでタグを作成する。
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$TAG" \
+              --generate-notes
+          else
+            # pushされた既存タグだけを公開し、別コミットへの付け替えを防ぐ。
+            gh release create "$TAG" \
+              --verify-tag \
+              --title "$TAG" \
+              --generate-notes
+          fi
+
+          echo "## リリース" >> "$GITHUB_STEP_SUMMARY"
+          gh release view "$TAG" --json url --jq '.url' >> "$GITHUB_STEP_SUMMARY"
