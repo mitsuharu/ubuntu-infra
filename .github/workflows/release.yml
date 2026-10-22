@@ -23,8 +23,9 @@ concurrency:
 jobs:
   release:
     name: タグからリリースを公開
-    # ubuntu-latestは移行時期に中身が変わるため、既存CIと同じLTSに固定する。
-    runs-on: ubuntu-24.04
+    # bashとプリインストールのghだけを使い、OSのバージョンに依存しないため、
+    # 固定版の廃止追従が要らないubuntu-latestにする（macos-infraとも揃う）。
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
