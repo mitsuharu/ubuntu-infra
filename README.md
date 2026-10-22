@@ -119,12 +119,33 @@ gsettings set org.gnome.desktop.input-sources xkb-options "$(cat /path/to/backup
 
 ## 更新
 
+### 手動で更新する
+
+`master` を最新にしてから、変更予定を確認して適用します。
+
+```bash
+cd ~/ubuntu-infra
+git status                      # 未コミットの変更がないことを確認
+git switch master
+git pull --ff-only origin master
+bash install.sh                 # 変更予定を確認
+bash install.sh --apply         # 実際に適用
+```
+
+`--ff-only` により、手元に独自のコミットがあって履歴が分かれている場合はマージせずに止まります。その場合は手元の変更を確認してから対処してください。
+
+### 更新スクリプトを使う
+
+`update.sh` は上の `git pull --ff-only` と再適用をまとめたものです。
+
 ```bash
 bash ~/ubuntu-infra/update.sh          # リポジトリのみfast-forward更新
 bash ~/ubuntu-infra/update.sh --apply  # 更新後にセットアップを再適用
 ```
 
-`main` / `master` かつ作業ツリーがクリーンな場合に限ります。アプリの既存パッケージはセットアップ時に再ダウンロードせず、通常の `sudo apt update` とパッケージを指定した `sudo apt install --only-upgrade ...` で更新します。Claude Codeは公式インストーラーの更新方式を利用します。Ruby / Nodeは `config.local.sh` のバージョンを明示的に変えてからanyenvを再適用します。定義が見つからない場合は対応するruby-build / node-buildの更新を確認してください。
+`--apply` は変更予定の表示を挟まずに適用します。更新内容を確認したい場合は、`update.sh` だけを実行し、`bash install.sh` で予定を見てから `bash install.sh --apply` を実行してください。
+
+どちらの方法も `main` / `master` かつ作業ツリーがクリーンな場合に限ります（`update.sh` はそれ以外では止まります）。アプリの既存パッケージはセットアップ時に再ダウンロードせず、通常の `sudo apt update` とパッケージを指定した `sudo apt install --only-upgrade ...` で更新します。Claude Codeは公式インストーラーの更新方式を利用します。Ruby / Nodeは `config.local.sh` のバージョンを明示的に変えてからanyenvを再適用します。定義が見つからない場合は対応するruby-build / node-buildの更新を確認してください。
 
 `bootstrap.sh` は冒頭のcurl手順で使う初回セットアップの入口です。取得済みのbootstrapに `--apply` を付けるとclone後にそのまま適用できます。まず既定の変更予定表示で設定を確認してください。
 
