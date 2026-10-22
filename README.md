@@ -58,6 +58,8 @@ bash install.sh --only anyenv          # この部分だけ予定を見る
 bash install.sh --only base --apply    # 依存パッケージ
 bash install.sh --only dotfiles --apply
 bash install.sh --only anyenv --apply
+bash install.sh --only safe-chain          # Safe Chainの変更予定
+bash install.sh --only safe-chain --apply  # Safe Chainの導入・更新
 ```
 
 | モジュール | 内容 |
@@ -65,14 +67,34 @@ bash install.sh --only anyenv --apply
 | `base` | build-essential、Rubyビルド依存、Zsh、Java 17、gh、GPG、pinentry、Watchmanなど |
 | `dotfiles` | Bash / Zshのanyenv初期化、GPG_TTY、Linux版Android SDK / FlutterのPATH、共通alias |
 | `anyenv` | anyenv、anyenv-update、rbenv、nodenv、Ruby 3.4.11、Node.js 24.21.0、Corepack、aliasesプラグイン |
+| `safe-chain` | 公式インストーラーをバージョン固定・SHA-256検証付きで実行し、パッケージ取得時の保護を設定 |
 | `japanese` | fcitx5＋Mozc、GTK / Qt frontend、日本語パック・フォント、自動起動、キーボード→Mozcの順序 |
 | `desktop` | Caps Lock→Ctrl、XDG標準フォルダの英語名への参照変更 |
 | `apps` | Chrome、VS Code、1Password、ChatGPT、Claude Code（個別に無効化可能） |
 | `chrome-keyring` | Seahorse導入と起動、自動ログイン時のパスワードなしキーリングへの変更案内 |
 
-個別実行時、`dotfiles` / `anyenv` / `desktop` より先に `base` を適用してください。全体実行時は順に処理します。`all` が初期値です。途中で失敗した場合は、原因を修正して同じコマンドを再実行できます。
+個別実行時、`dotfiles` / `anyenv` / `safe-chain` / `desktop` より先に `base` を適用してください。全体実行時は順に処理します。`all` が初期値です。途中で失敗した場合は、原因を修正して同じコマンドを再実行できます。
 
 `anyenv` はグローバルRuby / Nodeバージョンを上表の値に設定します。プロジェクト内の `.ruby-version` / `.node-version` は以後のシェルでは引き続き優先されます。スクリプト実行中のみ環境変数で導入対象バージョンを固定します。YarnはプロジェクトごとにCorepackで選びます。デフォルトシェルの変更、Android SDK / Flutterそのもののインストールは行いません。
+
+## Safe Chain
+
+全体の `--apply` では、anyenvの直後に `safe-chain` モジュールを実行します。既定のdry-runは予定の表示だけで、ダウンロードも設定変更もしません。導入・更新は[公式Unix/Linux/macOS手順](https://github.com/AikidoSec/safe-chain#unixlinuxmacos)の「バージョン固定URLから取得 → SHA-256照合 → `sh` で実行」の順序を維持します。
+
+導入先は `~/.safe-chain` です。公式処理はBash / Zshなど検出したシェルの初期化ファイルに読み込み処理を追加し、対象パッケージマネージャーの既存aliasを置き換える場合があります。npm / Volta / nvm版のSafe Chainがあれば公式処理で移行されることがあります。変更前のシェル設定は通常のバックアップ先の `safe-chain/` 以下へ保存し、ファイル自体がシンボリックリンクならリンクをバックアップして独立したコピーに置き換えます。ホーム外の設定、親ディレクトリがシンボリックリンクの設定、壊れたリンクは自動変更せず停止します。
+
+完了後はターミナルを再起動し、次を確認してください。
+
+```bash
+safe-chain --version
+npm safe-chain-verify
+```
+
+`OK: Safe-chain works!` が成功の目印です。同じバージョンが導入済みなら再インストールしません。シェル統合が無効な場合は既存設定を確認してください。
+
+バージョンとハッシュは `shells/safe-chain-release.sh` にまとめています。月次の更新PRを取り込んだ後、`bash install.sh --only safe-chain --apply` で更新できます。`update.sh --apply` による全体の再適用でも反映されます。
+
+毎月の更新確認、PR作成のためのGitHub設定、失敗時の対応は [Safe Chainの運用手順](docs/safe-chain.md) を参照してください。
 
 ## 初回だけ必要な操作
 

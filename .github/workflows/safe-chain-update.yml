@@ -1,0 +1,94 @@
+name: Safe Chainの月次更新
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 毎月1日 11:37 JST。
+    - cron: '37 2 1 * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: safe-chain-update
+  # PR作成途中の中断でブランチだけ残すことを避ける。
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.ref == 'refs/heads/master'
+    # 既存CIと同じLTSに固定し、更新ジョブでセットアップ本体を実行しない。
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+
+      - name: 公式手順とインストーラーのSHA-256を確認
+        run: python3 scripts/update_safe_chain.py
+
+      - name: 更新処理のテスト
+        run: python3 -m unittest discover -s tests -p 'test_safe_chain*.py'
+
+      - name: 更新PRを作成
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- shells/safe-chain-release.sh; then
+            echo 'Safe Chainの更新はありません。' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          source shells/safe-chain-release.sh
+          branch="ci/safe-chain-${SAFE_CHAIN_RELEASE}-${SAFE_CHAIN_INSTALLER_SHA256:0:12}"
+          existing_pr="$(gh pr list --head "$branch" --base master --state all --json url --jq '.[0].url // empty')"
+          if [[ -n "$existing_pr" ]]; then
+            echo "同じ更新のPRは作成済みです: $existing_pr" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if git ls-remote --exit-code --heads origin "$branch"; then
+            # PR作成だけが失敗した前回実行を再開する。既存ブランチは上書きしない。
+            git fetch origin "$branch"
+            test "$(git diff --name-only origin/master FETCH_HEAD)" = "shells/safe-chain-release.sh"
+            git show FETCH_HEAD:shells/safe-chain-release.sh > "$RUNNER_TEMP/safe-chain-release.sh"
+            cmp shells/safe-chain-release.sh "$RUNNER_TEMP/safe-chain-release.sh"
+          else
+            git switch -c "$branch"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add shells/safe-chain-release.sh
+            git commit -m "chore: Safe Chain ${SAFE_CHAIN_RELEASE}の公式インストール手順に追従" \
+              -m 'Co-authored-by: GitHub Actions <41898282+github-actions[bot]@users.noreply.github.com>'
+            git push origin "$branch"
+          fi
+
+          cat > "$RUNNER_TEMP/safe-chain-pr.md" <<'BODY'
+          ## 目的
+
+          Safe Chainの公式READMEに記載された最新のインストール手順へ追従します。
+
+          ## 変更内容
+
+          バージョンとSHA-256を更新しました。公式READMEのUnix/Linux/macOS手順、最新の正式リリース、取得したインストーラーのSHA-256を照合しています。
+
+          参照: https://github.com/AikidoSec/safe-chain#unixlinuxmacos
+
+          ## テスト内容
+
+          更新処理とインストール失敗時の安全性テストを実施しました。Ubuntuの通常CIが承認待ちの場合、PR画面の Approve workflows to run から実行してください。
+
+          ## 要確認事項
+
+          リリース内容とCIの成功を確認してから手動でマージしてください。自動マージは行いません。
+          BODY
+          gh pr create --base master --head "$branch" \
+            --title "chore: Safe Chain ${SAFE_CHAIN_RELEASE}に更新" \
+            --body-file "$RUNNER_TEMP/safe-chain-pr.md"
+          echo "Safe Chain ${SAFE_CHAIN_RELEASE}の更新PRを作成しました。CIが承認待ちの場合はPR画面から承認してください。" >> "$GITHUB_STEP_SUMMARY"
