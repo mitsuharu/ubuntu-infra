@@ -25,6 +25,7 @@
   profiles=("$HOME/.bashrc")
   if command -v zsh >/dev/null; then profiles+=("$(zsh -c 'echo ${ZDOTDIR:-$HOME}/.zshrc')"); fi
   if command -v fish >/dev/null; then profiles+=("$(fish -c 'echo ~/.config/fish/config.fish')"); fi
+  # shellcheck disable=SC2016 # $PROFILEはBashではなくPowerShell側で展開する。
   if command -v pwsh >/dev/null; then profiles+=("$(pwsh -NoProfile -Command 'echo $PROFILE')"); fi
   /usr/bin/python3 "$ROOT/scripts/safe_chain_profiles.py" "$BACKUP_DIR/safe-chain" "${profiles[@]}"
 
