@@ -51,15 +51,3 @@ run sudo apt-get install -y curl ca-certificates gnupg
 [[ "$INSTALL_1PASSWORD" != 1 ]] || install_deb 1password https://downloads.1password.com/linux/debian/amd64/stable/1password-latest.deb
 [[ "$INSTALL_CHATGPT" != 1 ]] || install_deb chatgpt https://persistent.oaistatic.com/codex-app-prod/linux/deb/latest/chatgpt_amd64.deb
 [[ "$INSTALL_CLAUDE_DESKTOP" != 1 ]] || install_claude_desktop
-if [[ "$INSTALL_CLAUDE" == 1 ]]; then
-  if command -v claude >/dev/null; then
-    log 'Claude Code導入済み（更新はclaude update）'
-  elif [[ "$APPLY" == 0 ]]; then
-    log 'Claude Code: https://claude.ai/install.sh を取得後、ユーザー権限でbash実行'
-  else
-    claude_installer=$(mktemp)
-    curl --proto '=https' --tlsv1.2 -fL --retry 3 https://claude.ai/install.sh -o "$claude_installer"
-    bash "$claude_installer" stable
-    rm -f "$claude_installer"
-  fi
-fi

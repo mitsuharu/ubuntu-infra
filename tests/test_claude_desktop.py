@@ -15,7 +15,7 @@ umask 077
 ROOT=$1
 APPLY=$2
 source "$ROOT/shells/common.sh"
-INSTALL_CHROME=0 INSTALL_VSCODE=0 INSTALL_1PASSWORD=0 INSTALL_CHATGPT=0 INSTALL_CLAUDE=0
+INSTALL_CHROME=0 INSTALL_VSCODE=0 INSTALL_1PASSWORD=0 INSTALL_CHATGPT=0
 INSTALL_CLAUDE_DESKTOP=1
 source "$ROOT/shells/apps.sh"
 '''
@@ -81,6 +81,12 @@ echo 'fpr:::::::::0000000000000000000000000000000000000000:'
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('Claude Desktop:', result.stdout)
         self.assertEqual(self.sudo_commands(), [])
+
+    def test_claude_code_cli_is_not_installed(self):
+        result = self.run_apps(apply=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn('claude.ai/install.sh', result.stdout)
+        self.assertNotIn('Claude Code', result.stdout)
 
     def test_apply_registers_official_repository_and_installs_package(self):
         result = self.run_apps(apply=True)

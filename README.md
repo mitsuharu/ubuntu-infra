@@ -49,7 +49,7 @@ INSTALL_CHATGPT=0
 CONFIG
 ```
 
-Claude Desktop（`INSTALL_CLAUDE_DESKTOP`）とClaude Code CLI（`INSTALL_CLAUDE`）は別のものです。DesktopはChat・Cowork・Codeタブを持つGUIアプリで、Linux版はベータです。[公式手順](https://code.claude.com/docs/ja/desktop-linux)どおりAnthropicのaptリポジトリを登録して導入し、登録前に署名キーのフィンガープリントを照合します。CLIはターミナルの `claude` コマンドです。
+Claude Desktop（`INSTALL_CLAUDE_DESKTOP`）はChat・Cowork・Codeタブを持つGUIアプリで、Linux版はベータです。[公式手順](https://code.claude.com/docs/ja/desktop-linux)どおりAnthropicのaptリポジトリを登録して導入し、登録前に署名キーのフィンガープリントを照合します。Claude Code CLI（ターミナルの `claude` コマンド）は導入しません。以前のセットアップで導入済みのCLIは自動では削除しないため、不要なら `~/.local/bin/claude` と `~/.local/share/claude` を手動で削除してください。
 
 キーボードの初期値はメモの「キーボードー日本語」に合わせた `jp` です。USキーボードでは `us` に変更してください。GNOMEのシステム全体の物理キーボード配列は変更せず、fcitx5のグループ配列を設定します。
 
@@ -72,7 +72,7 @@ bash install.sh --only safe-chain --apply  # Safe Chainの導入・更新
 | `safe-chain` | 公式インストーラーをバージョン固定・SHA-256検証付きで実行し、パッケージ取得時の保護を設定 |
 | `japanese` | fcitx5＋Mozc、GTK / Qt frontend、日本語パック・フォント、自動起動、キーボード→Mozcの順序 |
 | `desktop` | Caps Lock→Ctrl、XDG標準フォルダの英語名への参照変更 |
-| `apps` | Chrome、VS Code、1Password、ChatGPT、Claude Desktop、Claude Code CLI（個別に無効化可能） |
+| `apps` | Chrome、VS Code、1Password、ChatGPT、Claude Desktop（個別に無効化可能） |
 | `chrome-keyring` | Seahorse導入と起動、自動ログイン時のパスワードなしキーリングへの変更案内 |
 
 個別実行時、`dotfiles` / `anyenv` / `safe-chain` / `desktop` より先に `base` を適用してください。全体実行時は順に処理します。`all` が初期値です。途中で失敗した場合は、原因を修正して同じコマンドを再実行できます。
@@ -147,7 +147,7 @@ bash ~/ubuntu-infra/update.sh --apply  # 更新後にセットアップを再適
 
 `--apply` は変更予定の表示を挟まずに適用します。更新内容を確認したい場合は、`update.sh` だけを実行し、`bash install.sh` で予定を見てから `bash install.sh --apply` を実行してください。
 
-どちらの方法も `main` / `master` かつ作業ツリーがクリーンな場合に限ります（`update.sh` はそれ以外では止まります）。アプリの既存パッケージはセットアップ時に再ダウンロードせず、通常の `sudo apt update` とパッケージを指定した `sudo apt install --only-upgrade ...` で更新します。Claude Codeは公式インストーラーの更新方式を利用します。Ruby / Nodeは `config.local.sh` のバージョンを明示的に変えてからanyenvを再適用します。定義が見つからない場合は対応するruby-build / node-buildの更新を確認してください。
+どちらの方法も `main` / `master` かつ作業ツリーがクリーンな場合に限ります（`update.sh` はそれ以外では止まります）。アプリの既存パッケージはセットアップ時に再ダウンロードせず、通常の `sudo apt update` とパッケージを指定した `sudo apt install --only-upgrade ...` で更新します。Ruby / Nodeは `config.local.sh` のバージョンを明示的に変えてからanyenvを再適用します。定義が見つからない場合は対応するruby-build / node-buildの更新を確認してください。
 
 `bootstrap.sh` は冒頭のcurl手順で使う初回セットアップの入口です。取得済みのbootstrapに `--apply` を付けるとclone後にそのまま適用できます。まず既定の変更予定表示で設定を確認してください。
 
