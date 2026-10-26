@@ -34,7 +34,7 @@ Waylandはアプリ・ツールキットによって入力と候補位置の挙�
 
 ## 公式配布元
 
-アプリはHTTPSの公式debをaptで導入します。deb内のパッケージ名・アーキテクチャを検査します。最初のdebはHTTPS配布元を信頼して取得し、別配布のチェックサムや署名との照合は行いません。ベンダーのdebが登録する署名付きaptリポジトリを以後の更新に利用します。Claude Codeは公式スクリプトをファイルに保存してから通常ユーザーで実行します。スクリプトはベンダーが更新し得るものです。
+アプリはHTTPSの公式debをaptで導入します。deb内のパッケージ名・アーキテクチャを検査します。最初のdebはHTTPS配布元を信頼して取得し、別配布のチェックサムや署名との照合は行いません。ベンダーのdebが登録する署名付きaptリポジトリを以後の更新に利用します。Claude Codeは公式スクリプトをファイルに保存してから通常ユーザーで実行します。スクリプトはベンダーが更新し得るものです。Claude Desktopは公式手順どおりAnthropicのaptリポジトリ（`downloads.claude.ai/claude-desktop`）を登録してaptで導入します。apt全体が信頼するキーになるため、登録前に署名キーの主キーのフィンガープリントを公式ドキュメント記載の値と照合し、一致しなければ停止します。
 
 ChatGPTは公式Linuxプレビューのdebを使います。公開されているUbuntu 24.04 / 26.04対応手順を参照しています。サインインとアプリ内セットアップは手動です。
 
@@ -50,6 +50,7 @@ ChatGPTは公式Linuxプレビューのdebを使います。公開されてい�
 - [1Password Linux](https://support.1password.com/install-linux/)
 - [ChatGPT Linux](https://learn.chatgpt.com/docs/linux/linux-app)
 - [Claude Codeセットアップ](https://code.claude.com/docs/en/setup)
+- [Claude Desktop on Linux](https://code.claude.com/docs/ja/desktop-linux)
 
 ## AGENTS.mdの出典
 

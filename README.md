@@ -49,6 +49,8 @@ INSTALL_CHATGPT=0
 CONFIG
 ```
 
+Claude Desktop（`INSTALL_CLAUDE_DESKTOP`）とClaude Code CLI（`INSTALL_CLAUDE`）は別のものです。DesktopはChat・Cowork・Codeタブを持つGUIアプリで、Linux版はベータです。[公式手順](https://code.claude.com/docs/ja/desktop-linux)どおりAnthropicのaptリポジトリを登録して導入し、登録前に署名キーのフィンガープリントを照合します。CLIはターミナルの `claude` コマンドです。
+
 キーボードの初期値はメモの「キーボードー日本語」に合わせた `jp` です。USキーボードでは `us` に変更してください。GNOMEのシステム全体の物理キーボード配列は変更せず、fcitx5のグループ配列を設定します。
 
 ## モジュール
@@ -70,7 +72,7 @@ bash install.sh --only safe-chain --apply  # Safe Chainの導入・更新
 | `safe-chain` | 公式インストーラーをバージョン固定・SHA-256検証付きで実行し、パッケージ取得時の保護を設定 |
 | `japanese` | fcitx5＋Mozc、GTK / Qt frontend、日本語パック・フォント、自動起動、キーボード→Mozcの順序 |
 | `desktop` | Caps Lock→Ctrl、XDG標準フォルダの英語名への参照変更 |
-| `apps` | Chrome、VS Code、1Password、ChatGPT、Claude Code（個別に無効化可能） |
+| `apps` | Chrome、VS Code、1Password、ChatGPT、Claude Desktop、Claude Code CLI（個別に無効化可能） |
 | `chrome-keyring` | Seahorse導入と起動、自動ログイン時のパスワードなしキーリングへの変更案内 |
 
 個別実行時、`dotfiles` / `anyenv` / `safe-chain` / `desktop` より先に `base` を適用してください。全体実行時は順に処理します。`all` が初期値です。途中で失敗した場合は、原因を修正して同じコマンドを再実行できます。
