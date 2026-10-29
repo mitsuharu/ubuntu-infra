@@ -10,12 +10,12 @@ while (($#)); do
     --apply) APPLY=1 ;;
     --dry-run) APPLY=0 ;;
     --only) shift; MODULE=${1:?--onlyにはモジュール名が必要です} ;;
-    -h|--help) echo 'bash install.sh [--dry-run|--apply] [--only base|dotfiles|anyenv|safe-chain|japanese|desktop|apps|chrome-keyring|all]'; exit 0 ;;
+    -h|--help) echo 'bash install.sh [--dry-run|--apply] [--only base|dotfiles|anyenv|yarn-switch|safe-chain|japanese|desktop|apps|chrome-keyring|all]'; exit 0 ;;
     *) die "不明な引数: $1" ;;
   esac
   shift
 done
-case "$MODULE" in all|base|dotfiles|anyenv|safe-chain|japanese|desktop|apps|chrome-keyring) ;; *) die "不明なモジュール: $MODULE" ;; esac
+case "$MODULE" in all|base|dotfiles|anyenv|yarn-switch|safe-chain|japanese|desktop|apps|chrome-keyring) ;; *) die "不明なモジュール: $MODULE" ;; esac
 source /etc/os-release
 [[ "$ID" == ubuntu && ( "$VERSION_ID" == 24.04 || "$VERSION_ID" == 26.04 ) ]] || die 'Ubuntu 24.04 / 26.04 が対象です'
 [[ $(dpkg --print-architecture) == amd64 ]] || die 'この構成の対応CPUはamd64です（Chrome/1Passwordを含むため）'
@@ -49,7 +49,7 @@ if [[ "$APPLY" == 1 ]]; then
   mkdir -p "$BACKUP_DIR"
   log "設定のバックアップ先: $BACKUP_DIR"
 fi
-for step in base dotfiles anyenv safe-chain japanese desktop apps chrome-keyring; do
+for step in base dotfiles anyenv yarn-switch safe-chain japanese desktop apps chrome-keyring; do
   if [[ "$MODULE" == all || "$MODULE" == "$step" ]]; then
     log "--- $step ---"
     source "$ROOT/shells/$step.sh"
