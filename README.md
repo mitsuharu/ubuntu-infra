@@ -60,6 +60,7 @@ bash install.sh --only anyenv          # この部分だけ予定を見る
 bash install.sh --only base --apply    # 依存パッケージ
 bash install.sh --only dotfiles --apply
 bash install.sh --only anyenv --apply
+bash install.sh --only yarn-switch --apply  # Yarn Switchの導入・更新
 bash install.sh --only safe-chain          # Safe Chainの変更予定
 bash install.sh --only safe-chain --apply  # Safe Chainの導入・更新
 ```
@@ -68,20 +69,33 @@ bash install.sh --only safe-chain --apply  # Safe Chainの導入・更新
 | --- | --- |
 | `base` | build-essential、Rubyビルド依存、Zsh、Java 17、gh、GPG、pinentry、Watchmanなど |
 | `dotfiles` | Bash / Zshのanyenv初期化、GPG_TTY、Linux版Android SDK / FlutterのPATH、共通alias |
-| `anyenv` | anyenv、anyenv-update、rbenv、nodenv、Ruby 3.4.11、Node.js 24.21.0、Corepack、aliasesプラグイン |
+| `anyenv` | anyenv、anyenv-update、rbenv、nodenv、Ruby 3.4.11、Node.js 24.21.0、aliasesプラグイン |
+| `yarn-switch` | 公式インストーラーでYarn Switchを導入・最新の安定版に更新（Corepackは使わない） |
 | `safe-chain` | 公式インストーラーをバージョン固定・SHA-256検証付きで実行し、パッケージ取得時の保護を設定 |
 | `japanese` | fcitx5＋Mozc、GTK / Qt frontend、日本語パック・フォント、自動起動、キーボード→Mozcの順序 |
 | `desktop` | Caps Lock→Ctrl、XDG標準フォルダの英語名への参照変更 |
 | `apps` | Chrome、VS Code、1Password、ChatGPT、Claude Desktop（個別に無効化可能） |
 | `chrome-keyring` | Seahorse導入と起動、自動ログイン時のパスワードなしキーリングへの変更案内 |
 
-個別実行時、`dotfiles` / `anyenv` / `safe-chain` / `desktop` より先に `base` を適用してください。全体実行時は順に処理します。`all` が初期値です。途中で失敗した場合は、原因を修正して同じコマンドを再実行できます。
+個別実行時、`dotfiles` / `anyenv` / `yarn-switch` / `safe-chain` / `desktop` より先に `base` を適用してください。全体実行時は順に処理します。`all` が初期値です。途中で失敗した場合は、原因を修正して同じコマンドを再実行できます。
 
-`anyenv` はグローバルRuby / Nodeバージョンを上表の値に設定します。プロジェクト内の `.ruby-version` / `.node-version` は以後のシェルでは引き続き優先されます。スクリプト実行中のみ環境変数で導入対象バージョンを固定します。YarnはプロジェクトごとにCorepackで選びます。デフォルトシェルの変更、Android SDK / Flutterそのもののインストールは行いません。
+`anyenv` はグローバルRuby / Nodeバージョンを上表の値に設定します。プロジェクト内の `.ruby-version` / `.node-version` は以後のシェルでは引き続き優先されます。スクリプト実行中のみ環境変数で導入対象バージョンを固定します。Yarnは下記のYarn Switchで導入します。デフォルトシェルの変更、Android SDK / Flutterそのもののインストールは行いません。
+
+## Yarn
+
+Yarnは[Yarn Switch](https://v6.yarnpkg.com/concepts/switch)で導入します。Node.js 25以降はcorepackが梱包されないため、`corepack enable` は使用しません。全体の `--apply` では、anyenvの直後に `yarn-switch` モジュールが公式インストーラー（`https://repo.yarnpkg.com/install`）を一時ディレクトリにダウンロードして実行し、`~/.yarn/switch/bin/yarn` に配置します。既定のdry-runは予定の表示だけです。
+
+公式インストーラーは `~/.yarn/switch/env` を作成し、`~/.bashrc` / `~/.zshrc` の末尾に読み込み行を追記します（既に追記済みなら変更しません）。変更前の設定は通常のバックアップ先の `yarn-switch/` 以下へ保存します。共通シェル設定でも `~/.yarn/switch/bin` をPATHの先頭に追加し、以前の `corepack enable` で作られたnodenv配下の `yarn` より優先させます。完了後はターミナルを再起動して確認してください。
+
+```bash
+yarn switch --version
+```
+
+再実行すると最新の安定版で上書きされます（`update.sh --apply` でも更新されます）。基本コマンド、Safe Chainと併用するときのダウンロード失敗と回避方法は [Yarn Switchの手順](docs/yarn-switch.md) を参照してください。
 
 ## Safe Chain
 
-全体の `--apply` では、anyenvの直後に `safe-chain` モジュールを実行します。既定のdry-runは予定の表示だけで、ダウンロードも設定変更もしません。導入・更新は[公式Unix/Linux/macOS手順](https://github.com/AikidoSec/safe-chain#unixlinuxmacos)の「バージョン固定URLから取得 → SHA-256照合 → `sh` で実行」の順序を維持します。
+全体の `--apply` では、yarn-switchの直後に `safe-chain` モジュールを実行します。既定のdry-runは予定の表示だけで、ダウンロードも設定変更もしません。導入・更新は[公式Unix/Linux/macOS手順](https://github.com/AikidoSec/safe-chain#unixlinuxmacos)の「バージョン固定URLから取得 → SHA-256照合 → `sh` で実行」の順序を維持します。
 
 導入先は `~/.safe-chain` です。公式処理はBash / Zshなど検出したシェルの初期化ファイルに読み込み処理を追加し、対象パッケージマネージャーの既存aliasを置き換える場合があります。npm / Volta / nvm版のSafe Chainがあれば公式処理で移行されることがあります。変更前のシェル設定は通常のバックアップ先の `safe-chain/` 以下へ保存し、ファイル自体がシンボリックリンクならリンクをバックアップして独立したコピーに置き換えます。ホーム外の設定、親ディレクトリがシンボリックリンクの設定、壊れたリンクは自動変更せず停止します。
 

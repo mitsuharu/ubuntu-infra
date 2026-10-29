@@ -23,7 +23,5 @@ clone_once https://github.com/tpope/rbenv-aliases.git "$RBENV_ROOT/plugins/rbenv
 clone_once https://github.com/nodenv/nodenv-aliases.git "$NODENV_ROOT/plugins/nodenv-aliases"
 run "$RBENV_ROOT/bin/rbenv" alias --auto
 run "$NODENV_ROOT/bin/nodenv" alias --auto
-run "$NODENV_ROOT/bin/nodenv" exec corepack enable
-run "$NODENV_ROOT/bin/nodenv" rehash
 run "$RBENV_ROOT/bin/rbenv" exec ruby --version
 run "$NODENV_ROOT/bin/nodenv" exec node --version

@@ -10,7 +10,8 @@
 | anyenv | 公式Gitリポジトリ＋インストール定義 |
 | rbenv / nodenv | 継続使用、バージョンを設定ファイルに分離 |
 | Ruby 3.4.11 / Node.js 24.21.0 | 同じ版、ruby-build / node-buildの公開定義の存在を確認 |
-| Corepack / aliases | 継続使用、nodenv execで対象Nodeを固定 |
+| Yarn Switch | 同じ公式インストーラーで導入（Corepackは使わない）、シェル設定はバックアップ後に変更 |
+| nodenv-aliases / rbenv-aliases | 継続使用 |
 | openjdk@17 / gh / gpg / watchman | openjdk-17-jdk / gh / gnupg / watchman |
 | pinentry-mac | pinentry-gnome3（GPG既存設定は上書きしない） |
 | .zprofile全体へのリンク | 共通設定ファイル＋.bashrc / .zshrcの管理ブロック |
