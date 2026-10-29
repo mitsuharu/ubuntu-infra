@@ -9,6 +9,10 @@ if [ -x "$ANYENV_ROOT/bin/anyenv" ]; then
     eval "$(anyenv init - bash)"
   fi
 fi
+# 公式インストーラーが追記する読み込み行だけに頼らない。追記位置によってはnodenv配下に残るcorepack由来のyarnが優先されるため、anyenvの後で先頭に追加する。
+if [ -d "$HOME/.yarn/switch/bin" ]; then
+  export PATH="$HOME/.yarn/switch/bin:$PATH"
+fi
 if [ -t 0 ]; then export GPG_TTY="$(tty)"; fi
 if [ -d "$HOME/Android/Sdk" ]; then
   export ANDROID_HOME="$HOME/Android/Sdk"

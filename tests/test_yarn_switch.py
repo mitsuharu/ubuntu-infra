@@ -119,6 +119,39 @@ shutil.copyfile(os.environ['FIXTURE'], sys.argv[4])
         self.assertEqual(self.run_installer(INSTALLER_FAIL='1').returncode, 9)
 
 
+class ShellSettingsTests(unittest.TestCase):
+    def test_yarn_switch_precedes_nodenv_yarn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            (home / '.yarn/switch/bin').mkdir(parents=True)
+            # anyenvの初期化を模擬し、nodenv配下のyarnが先にPATHへ入る状況を作る。
+            anyenv = home / '.anyenv/bin/anyenv'
+            anyenv.parent.mkdir(parents=True)
+            anyenv.write_text('#!/bin/sh\necho \'export PATH="$HOME/.anyenv/envs/nodenv/shims:$PATH"\'\n')
+            anyenv.chmod(0o755)
+            for shell in ['bash', 'zsh']:
+                if shutil.which(shell) is None:
+                    continue
+                with self.subTest(shell=shell):
+                    result = subprocess.run([shell, '-c', '. "$1"; printf %s "$PATH"', '_',
+                                             str(ROOT / 'dotfiles/shell.sh')],
+                                            env=dict(os.environ, HOME=str(home), PATH='/usr/bin:/bin'),
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    entries = result.stdout.split(':')
+                    self.assertEqual(entries[0], f'{home}/.yarn/switch/bin')
+                    self.assertIn(f'{home}/.anyenv/envs/nodenv/shims', entries)
+
+    def test_path_is_unchanged_without_yarn_switch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(['bash', '-c', '. "$1"; printf %s "$PATH"', '_',
+                                     str(ROOT / 'dotfiles/shell.sh')],
+                                    env=dict(os.environ, HOME=tmp, PATH='/usr/bin:/bin'),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn('.yarn/switch', result.stdout)
+
+
 class AnyenvTests(unittest.TestCase):
     def test_anyenv_no_longer_enables_corepack(self):
         result = subprocess.run(['bash', str(ROOT / 'install.sh'), '--only', 'anyenv'],
